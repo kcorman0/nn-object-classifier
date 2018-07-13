@@ -10,9 +10,12 @@ from tqdm import tqdm
 # Go through each folder in a directory and add the images to an array.
 # The folder name becomes the label for its files
 def load_data(root_directory):
-    subdirs = [x[0] for x in os.walk(root_directory)]       
-    images = []
-    labels = []                                                                     
+    subdirs = [x[0] for x in os.walk(root_directory)]
+    train_images = []
+    train_labels = []
+    test_images = []
+    test_labels = []
+    i = 0                                                              
     for subdir in subdirs:
         label = subdir.split('/')[5:][0]
         print("Subdirectory:", label)
@@ -22,15 +25,21 @@ def load_data(root_directory):
             img = cv2.cv2.imread(path, cv2.cv2.IMREAD_GRAYSCALE)
 
             if img is not None:
+                i += i
                 img = cv2.cv2.resize(img, (img_size, img_size))
-                images.append(np.array(img)) # TODO is np.array necessary?
-                labels.append(label)
+                if i % 10 == 0:
+                    test_images.append(np.array(img))
+                    test_labels.append(label)
+                else:
+                    train_images.append(np.array(img)) # TODO is np.array necessary?
+                    train_labels.append(classes.index(label))
             else:
                 print("Image not loaded")
-    return images, labels
+    return train_images, train_labels, test_images, test_labels
 
 # Displays 9 images on a plt subplot
 def display_images(images, labels, pred_labels=None):
+    print("Images: {0}  Labels: {1}".format(len(images), len(labels)))
     assert len(images) == len(labels) == 9
     fig, axes = plt.subplots(3, 3)
     fig.subplots_adjust(hspace=0.3, wspace=0.3)
@@ -47,7 +56,19 @@ def display_images(images, labels, pred_labels=None):
         ax.set_yticks([])
     plt.show()
 
+# Change the network's output (which is an int) to a string representing the category it predicted
+def argmax_to_label(prediction):
+    test = prediction
+    # test = tf.constant(4)
+    print("PREDICTION WHERE IS THIS:",test)
+    # prediction = tf.get_default_graph().as_graph_def().node[0].attr["value"].tensor.int_val[0]
+    test = tf.Session().run(test)
+    print("AFTER TJE SJOT",test)
+    label = classes[test]
+    return label
+
 directory = "/Users/kippc/Downloads/101_ObjectCategories/"
+learning_rate = 0.0001 # TODO temp value
 # Label variables
 classes = next(os.walk(directory))[1]
 num_classes = len(classes)
@@ -55,14 +76,14 @@ num_classes = len(classes)
 img_size = 50 # TODO temp value
 img_shape = (img_size, img_size)
 # Data
-train_images, train_labels = load_data(directory) # TODO separate train/test
+train_images, train_labels, test_images, test_labels = load_data(directory)
 
 # Input (the flattened image)
-x = tf.placeholder(tf.float32, shape=[None, img_size**2], name="x")
+x = tf.placeholder(tf.float32, shape=[None, img_size, img_size], name="x")
 # Output (what the network thinks the image is)
-y = tf.placeholder(tf.float32, shape=[None, 1], name="y") # TODO shape for this and y_true may cause problems
+y = tf.placeholder(tf.int32, shape=[None], name="y") # TODO shape for this and y_true may cause problems
 # Correct label from the dataset
-y_true = tf.placeholder(tf.float32, shape=[None, 1], name="y_true")
+y_true = tf.placeholder(tf.int32, shape=[None], name="y_true")
 
 # Layer 1 variables
 filters = 16
@@ -76,6 +97,8 @@ pooling_stride2 = 2
 pooling_kernel2 = 2
 # Fully connected layer variables
 fc_size = 128
+dropout_rate = 0.25
+is_training = True # TODO change this variable when not training
 
 # Initialize layer 1
 x = tf.reshape(x, shape=[-1, img_size, img_size, 1])
@@ -85,8 +108,27 @@ conv1 = tf.layers.max_pooling2d(conv1, pooling_stride, pooling_kernel)
 conv2 = tf.layers.conv2d(conv1, filters2, filter_size2, activation=tf.nn.relu)
 conv2 = tf.layers.max_pooling2d(conv2, pooling_stride2, pooling_kernel2)
 # Initialize fully connected layer
-fc1 = tf.contrib.layers.flatten(conv2)
+fc1 = tf.layers.flatten(conv2)
 fc1 = tf.layers.dense(fc1, fc_size)
+fc1 = tf.layers.dropout(fc1, rate=dropout_rate, training=is_training)
+# Cost function
+cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits = fc1, labels=y_true)
+cost = tf.reduce_mean(cross_entropy)
+# Train (TODO)
+train = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
+# Network's label prediction
+pred = tf.argmax(fc1, 1)
+# pred = tf.Session().run([pred], feed_dict={x: test_images})[0]
+# pred = argmax_to_label(pred)
+print("PREDICTION:",pred)
+
+# sample_indexes = random.sample(range(len(images28)), 10)
+# sample_images = [images28[i] for i in sample_indexes]
+# sample_labels = [labels[i] for i in sample_indexes]
+# predicted = sess.run([correct_pred], feed_dict={x: test_images})[0]
+# print(sample_labels)
+# print("Predicted:",predicted)
+
 
 session = tf.Session()
 # session.run(tf.global_variable_initializer())
@@ -95,4 +137,8 @@ session = tf.Session()
 session.close()
 
 # Print first 9 images (for testing)
+print("OUTSIDE METHOD")
+print("Total size test:",len(test_labels))
+print("Total size train:",len(train_labels))
+print("Images: {0}  Labels: {1}".format(len(train_images[0:9]), len(train_labels[0:9])))
 display_images(images=train_images[0:9], labels=train_labels[0:9])
