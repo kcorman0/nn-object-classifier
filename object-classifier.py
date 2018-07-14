@@ -25,7 +25,7 @@ def load_data(root_directory):
             img = cv2.cv2.imread(path, cv2.cv2.IMREAD_GRAYSCALE)
 
             if img is not None:
-                i += i
+                i += 1
                 img = cv2.cv2.resize(img, (img_size, img_size))
                 if i % 10 == 0:
                     test_images.append(np.array(img))
@@ -39,7 +39,6 @@ def load_data(root_directory):
 
 # Displays 9 images on a plt subplot
 def display_images(images, labels, pred_labels=None):
-    print("Images: {0}  Labels: {1}".format(len(images), len(labels)))
     assert len(images) == len(labels) == 9
     fig, axes = plt.subplots(3, 3)
     fig.subplots_adjust(hspace=0.3, wspace=0.3)
@@ -56,6 +55,16 @@ def display_images(images, labels, pred_labels=None):
         ax.set_yticks([])
     plt.show()
 
+# TODO stop reusing same images (?)
+# Randomly selects the indicated number of images/labels for training
+def next_batch(size, images, labels):
+    n = np.arange(0, len(images))
+    np.random.shuffle(n)
+    n = n[0:size]
+    image_batch = [images[i] for i in n]
+    label_batch = [labels[i] for i in n]
+    return np.asarray(image_batch), np.asarray(label_batch)
+
 # Change the network's output (which is an int) to a string representing the category it predicted
 def argmax_to_label(prediction):
     test = prediction
@@ -67,24 +76,14 @@ def argmax_to_label(prediction):
     label = classes[test]
     return label
 
+# Constants
 directory = "/Users/kippc/Downloads/101_ObjectCategories/"
-learning_rate = 0.0001 # TODO temp value
 # Label variables
 classes = next(os.walk(directory))[1]
 num_classes = len(classes)
 # Image variables
 img_size = 50 # TODO temp value
 img_shape = (img_size, img_size)
-# Data
-train_images, train_labels, test_images, test_labels = load_data(directory)
-
-# Input (the flattened image)
-x = tf.placeholder(tf.float32, shape=[None, img_size, img_size], name="x")
-# Output (what the network thinks the image is)
-y = tf.placeholder(tf.int32, shape=[None], name="y") # TODO shape for this and y_true may cause problems
-# Correct label from the dataset
-y_true = tf.placeholder(tf.int32, shape=[None], name="y_true")
-
 # Layer 1 variables
 filters = 16
 filter_size = 5
@@ -99,10 +98,23 @@ pooling_kernel2 = 2
 fc_size = 128
 dropout_rate = 0.25
 is_training = True # TODO change this variable when not training
+# Training variables
+batch_size = 64
+learning_rate = 0.0001 # TODO temp value
+
+# Data
+train_images, train_labels, test_images, test_labels = load_data(directory)
+
+# Input (the flattened image)
+x = tf.placeholder(tf.float32, shape=[None, img_size, img_size], name="x")
+# Correct label for the input (in an array, ex. [0, 0, 1...])
+y = tf.placeholder(tf.float32, shape=[None, num_classes], name="y") # TODO shape for this and y_true may cause problems
+# Correct label from the dataset as an int
+y_true = tf.argmax(y, 1)
 
 # Initialize layer 1
-x = tf.reshape(x, shape=[-1, img_size, img_size, 1])
-conv1 = tf.layers.conv2d(x, filters, filter_size, activation=tf.nn.relu)
+x_reshape = tf.reshape(x, shape=[-1, img_size, img_size, 1])
+conv1 = tf.layers.conv2d(x_reshape, filters, filter_size, activation=tf.nn.relu)
 conv1 = tf.layers.max_pooling2d(conv1, pooling_stride, pooling_kernel)
 # Initialize layer 2
 conv2 = tf.layers.conv2d(conv1, filters2, filter_size2, activation=tf.nn.relu)
@@ -122,23 +134,13 @@ pred = tf.argmax(fc1, 1)
 # pred = argmax_to_label(pred)
 print("PREDICTION:",pred)
 
-# sample_indexes = random.sample(range(len(images28)), 10)
-# sample_images = [images28[i] for i in sample_indexes]
-# sample_labels = [labels[i] for i in sample_indexes]
-# predicted = sess.run([correct_pred], feed_dict={x: test_images})[0]
-# print(sample_labels)
-# print("Predicted:",predicted)
+sess = tf.Session()
+batch_images, batch_labels = next_batch(batch_size, train_images, train_labels)
+# sess.run(tf.global_variables_initializer())
+tf.Session().run(y_true, feed_dict={x: batch_images, y: batch_labels})
+print(y_true)
 
-
-session = tf.Session()
-# session.run(tf.global_variable_initializer())
-# print(session.run(conv2))
-
-session.close()
+sess.close()
 
 # Print first 9 images (for testing)
-print("OUTSIDE METHOD")
-print("Total size test:",len(test_labels))
-print("Total size train:",len(train_labels))
-print("Images: {0}  Labels: {1}".format(len(train_images[0:9]), len(train_labels[0:9])))
 display_images(images=train_images[0:9], labels=train_labels[0:9])
