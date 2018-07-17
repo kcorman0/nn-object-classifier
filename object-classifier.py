@@ -27,12 +27,14 @@ def load_data(root_directory):
             if img is not None:
                 i += 1
                 img = cv2.cv2.resize(img, (img_size, img_size))
+                one_hot = tf.one_hot(classes.index(label), num_classes)
+                # print("One-Hot",one_hot)
                 if i % 10 == 0:
                     test_images.append(np.array(img))
-                    test_labels.append(label)
+                    test_labels.append(one_hot)
                 else:
-                    train_images.append(np.array(img)) # TODO is np.array necessary?
-                    train_labels.append(classes.index(label))
+                    train_images.append(np.array(img))
+                    train_labels.append(one_hot)
             else:
                 print("Image not loaded")
     return train_images, train_labels, test_images, test_labels
@@ -105,12 +107,12 @@ learning_rate = 0.0001 # TODO temp value
 # Data
 train_images, train_labels, test_images, test_labels = load_data(directory)
 
-# Input (the flattened image)
+# Input (the greyscale image from the dataset)
 x = tf.placeholder(tf.float32, shape=[None, img_size, img_size], name="x")
-# Correct label for the input (in an array, ex. [0, 0, 1...])
-y = tf.placeholder(tf.float32, shape=[None, num_classes], name="y") # TODO shape for this and y_true may cause problems
-# Correct label from the dataset as an int
-y_true = tf.argmax(y, 1)
+# Correct label for the input (one-hot encoded)
+y = tf.placeholder(tf.float32, shape=[None, num_classes], name="y")
+# Correct label as an int
+y_int = tf.argmax(y, 1)
 
 # Initialize layer 1
 x_reshape = tf.reshape(x, shape=[-1, img_size, img_size, 1])
@@ -124,7 +126,7 @@ fc1 = tf.layers.flatten(conv2)
 fc1 = tf.layers.dense(fc1, fc_size)
 fc1 = tf.layers.dropout(fc1, rate=dropout_rate, training=is_training)
 # Cost function
-cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits = fc1, labels=y_true)
+cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits = fc1, labels=y_int)
 cost = tf.reduce_mean(cross_entropy)
 # Train (TODO)
 train = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
@@ -136,9 +138,19 @@ print("PREDICTION:",pred)
 
 sess = tf.Session()
 batch_images, batch_labels = next_batch(batch_size, train_images, train_labels)
+# print(batch_images)
+# print(batch_labels)
+# for i in batch_images:
+#     batch_images[i] = np.asarray([None, img_size, img_size], dtype=np.float32)
+# for i in batch_labels:
+#     batch_labels[i] = np.asarray([None, num_classes], dtype=np.float32)
+# batch_images = np.asarray([img_size, img_size], dtype=np.float32)
+# batch_labels = np.asarray([num_classes], dtype=np.float32)
+print("AFTER THIS:",batch_images)
+print(batch_labels)
 # sess.run(tf.global_variables_initializer())
-tf.Session().run(y_true, feed_dict={x: batch_images, y: batch_labels})
-print(y_true)
+tf.Session().run(y_int, feed_dict={x: batch_images, y: batch_labels})
+print(y_int)
 
 sess.close()
 
