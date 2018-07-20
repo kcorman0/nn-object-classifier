@@ -8,33 +8,36 @@ from tqdm import tqdm
 # Normalize the error based on the number of samples in the category
 
 # Go through each folder in a directory and add the images to an array.
-# The folder name becomes the label for its files
+# The folder name becomes the label for its images
 def load_data(root_directory):
     subdirs = [x[0] for x in os.walk(root_directory)]
+    subdirs.remove(root_directory)
     train_images = []
     train_labels = []
     test_images = []
     test_labels = []
-    i = 0                                                              
+    i = 0
+
     for subdir in subdirs:
         label = subdir.split('/')[5:][0]
         print("Subdirectory:", label)
         for img in tqdm(os.listdir(subdir)):
-            label = subdir.split('/')[5:][0]
-            path = os.path.join(subdir, img)
-            img = cv2.cv2.imread(path, cv2.cv2.IMREAD_GRAYSCALE)
-
+            path = os.path.join(subdir,img)
+            img = cv2.cv2.imread(path,cv2.cv2.IMREAD_GRAYSCALE)
+            
             if img is not None:
                 i += 1
                 img = cv2.cv2.resize(img, (img_size, img_size))
-                one_hot = tf.one_hot(classes.index(label), num_classes)
-                # print("One-Hot",one_hot)
+                # one_hot = tf.one_hot(classes.index(label), num_classes)
+                # one_hot = tf.Session().run(one_hot) # TODO better way to do this ?
+                label = subdir.split('/')[5:][0]
+                label = classes.index(label)
                 if i % 10 == 0:
                     test_images.append(np.array(img))
-                    test_labels.append(one_hot)
+                    test_labels.append(np.array(label))
                 else:
                     train_images.append(np.array(img))
-                    train_labels.append(one_hot)
+                    train_labels.append(np.array(label))
             else:
                 print("Image not loaded")
     return train_images, train_labels, test_images, test_labels
@@ -45,7 +48,7 @@ def display_images(images, labels, pred_labels=None):
     fig, axes = plt.subplots(3, 3)
     fig.subplots_adjust(hspace=0.3, wspace=0.3)
     for i, ax in enumerate(axes.flat):
-        ax.imshow(images[i], cmap="gray", vmin=0, vmax=255)
+        ax.imshow(images[i].reshape(img_shape), cmap="gray", vmin=0, vmax=255)
 
         if pred_labels is None:
             xlabel = "True: {0}".format(labels[i])
@@ -110,7 +113,7 @@ train_images, train_labels, test_images, test_labels = load_data(directory)
 # Input (the greyscale image from the dataset)
 x = tf.placeholder(tf.float32, shape=[None, img_size, img_size], name="x")
 # Correct label for the input (one-hot encoded)
-y = tf.placeholder(tf.float32, shape=[None, num_classes], name="y")
+y = tf.placeholder(tf.float32, shape=[None], name="y")
 # Correct label as an int
 y_int = tf.argmax(y, 1)
 
@@ -133,24 +136,17 @@ train = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
 # Network's label prediction
 pred = tf.argmax(fc1, 1)
 # pred = tf.Session().run([pred], feed_dict={x: test_images})[0]
-# pred = argmax_to_label(pred)
-print("PREDICTION:",pred)
+# pred_label = argmax_to_label(pred)
 
 sess = tf.Session()
 batch_images, batch_labels = next_batch(batch_size, train_images, train_labels)
-# print(batch_images)
-# print(batch_labels)
-# for i in batch_images:
-#     batch_images[i] = np.asarray([None, img_size, img_size], dtype=np.float32)
-# for i in batch_labels:
-#     batch_labels[i] = np.asarray([None, num_classes], dtype=np.float32)
-# batch_images = np.asarray([img_size, img_size], dtype=np.float32)
-# batch_labels = np.asarray([num_classes], dtype=np.float32)
-print("AFTER THIS:",batch_images)
+sess.run(tf.global_variables_initializer())
+
+# np.set_printoptions(threshold='nan')
+print(batch_images)
 print(batch_labels)
-# sess.run(tf.global_variables_initializer())
-tf.Session().run(y_int, feed_dict={x: batch_images, y: batch_labels})
-print(y_int)
+print("PREDICTION:",sess.run(y, feed_dict={x: batch_images, y: batch_labels}))
+# print(y_int)
 
 sess.close()
 
