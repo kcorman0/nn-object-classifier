@@ -28,8 +28,6 @@ def load_data(root_directory):
             if img is not None:
                 i += 1
                 img = cv2.cv2.resize(img, (img_size, img_size))
-                # one_hot = tf.one_hot(classes.index(label), num_classes)
-                # one_hot = tf.Session().run(one_hot) # TODO better way to do this ?
                 label = subdir.split('/')[5:][0]
                 label = classes.index(label)
                 if i % 10 == 0:
@@ -72,14 +70,10 @@ def next_batch(size, images, labels):
 
 # Change the network's output (which is an int) to a string representing the category it predicted
 def argmax_to_label(prediction):
-    test = prediction
-    # test = tf.constant(4)
-    print("PREDICTION WHERE IS THIS:",test)
-    # prediction = tf.get_default_graph().as_graph_def().node[0].attr["value"].tensor.int_val[0]
-    test = tf.Session().run(test)
-    print("AFTER TJE SJOT",test)
-    label = classes[test]
-    return label
+    labels = []
+    for pred in prediction:
+        labels.append(classes[pred])
+    return labels
 
 # Constants
 directory = "/Users/kippc/Downloads/101_ObjectCategories/"
@@ -112,10 +106,11 @@ train_images, train_labels, test_images, test_labels = load_data(directory)
 
 # Input (the greyscale image from the dataset)
 x = tf.placeholder(tf.float32, shape=[None, img_size, img_size], name="x")
-# Correct label for the input (one-hot encoded)
-y = tf.placeholder(tf.float32, shape=[None], name="y")
-# Correct label as an int
-y_int = tf.argmax(y, 1)
+# Correct label for the input as an int
+y = tf.placeholder(tf.int32, shape=[None], name="y")
+# Correct label
+# y_label = argmax_to_label(y) TODO better way to do this
+# print("YYY",y_label)
 
 # Initialize layer 1
 x_reshape = tf.reshape(x, shape=[-1, img_size, img_size, 1])
@@ -129,24 +124,21 @@ fc1 = tf.layers.flatten(conv2)
 fc1 = tf.layers.dense(fc1, fc_size)
 fc1 = tf.layers.dropout(fc1, rate=dropout_rate, training=is_training)
 # Cost function
-cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits = fc1, labels=y_int)
+cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=fc1, labels=y)
 cost = tf.reduce_mean(cross_entropy)
 # Train (TODO)
 train = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
 # Network's label prediction
 pred = tf.argmax(fc1, 1)
-# pred = tf.Session().run([pred], feed_dict={x: test_images})[0]
-# pred_label = argmax_to_label(pred)
+# pred_labels = argmax_to_label(pred) TODO do this later in the program
 
 sess = tf.Session()
 batch_images, batch_labels = next_batch(batch_size, train_images, train_labels)
 sess.run(tf.global_variables_initializer())
 
-# np.set_printoptions(threshold='nan')
-print(batch_images)
-print(batch_labels)
-print("PREDICTION:",sess.run(y, feed_dict={x: batch_images, y: batch_labels}))
-# print(y_int)
+print("given:",sess.run(y, feed_dict={x: batch_images, y: batch_labels}))
+print("cost:",sess.run(cost, feed_dict={x: batch_images, y: batch_labels}))
+print("prediction:", sess.run(pred, feed_dict={x: batch_images, y: batch_labels}))
 
 sess.close()
 
