@@ -29,7 +29,7 @@ def load_data(root_directory):
                 img = cv2.cv2.resize(img, (img_size, img_size))
                 label = subdir.split('/')[5:][0]
                 label = classes.index(label)
-                if i % 10 == 0:
+                if i % (1 / test_percent) == 0:
                     test_images.append(np.array(img))
                     test_labels.append(np.array(label))
                 else:
@@ -74,8 +74,13 @@ def argmax_to_label(prediction):
         labels.append(classes[pred])
     return labels
 
+# Creates a confusion matrix thats shows the accuracy of each category
+# def confusion_matrix(confusion):
+
 # Constants
-directory = "/Users/kippc/Downloads/101_ObjectCategories/"
+# Data variables
+directory = "/Users/kippc/Downloads/PetImages/"
+test_percent = .1
 # Label variables
 classes = next(os.walk(directory))[1]
 num_classes = len(classes)
@@ -98,7 +103,7 @@ dropout_rate = 0.25
 is_training = True
 # Training variables
 train_batch_size = 64
-learning_rate = 0.0005 # TODO temp value
+learning_rate = 0.0001 # TODO temp value
 training_iterations = 10000
 # Testing variables
 test_batch_size = 256
@@ -117,22 +122,23 @@ y = tf.placeholder(tf.int64, shape=[None], name="y")
 # Initialize layer 1
 x_reshape = tf.reshape(x, shape=[-1, img_size, img_size, 1])
 conv1 = tf.layers.conv2d(x_reshape, filters, filter_size, activation=tf.nn.relu)
-conv1 = tf.layers.max_pooling2d(conv1, pooling_stride, pooling_kernel)
+conv1 = tf.layers.max_pooling2d(conv1, pool_size=pooling_kernel, strides=pooling_stride)
 # Initialize layer 2
 conv2 = tf.layers.conv2d(conv1, filters2, filter_size2, activation=tf.nn.relu)
-conv2 = tf.layers.max_pooling2d(conv2, pooling_stride2, pooling_kernel2)
-# Initialize fully connected layer
+conv2 = tf.layers.max_pooling2d(conv2, pool_size=pooling_kernel2, strides=pooling_stride2)
+# Initialize fully connected layers
 fc1 = tf.layers.flatten(conv2)
-fc1 = tf.layers.dense(fc1, fc_size)
+fc1 = tf.layers.dense(fc1, fc_size, activation=tf.nn.relu)
 fc1 = tf.layers.dropout(fc1, rate=dropout_rate, training=is_training)
+fc2 = tf.layers.dense(fc1, num_classes)
 # TODO Normalize the error based on the number of samples in the category
 # Cost function
-cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=fc1, labels=y)
+cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=fc2, labels=y)
 cost = tf.reduce_mean(cross_entropy)
 # Train by minimizing the cost function
 train = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
 # Network's label prediction
-pred = tf.argmax(fc1, 1)
+pred = tf.argmax(fc2, 1)
 # pred_labels = argmax_to_label(pred) TODO do this later in the program
 correct_pred = tf.equal(pred, y)
 accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
@@ -149,11 +155,11 @@ for i in range(training_iterations):
     feed = {x: batch_images, y: batch_labels}
     sess.run(train, feed_dict=feed)
 
-    if i % 100 == 0:
+    if i % 100 == 0 or i == training_iterations - 1:
         acc = sess.run(accuracy, feed_dict=feed)
         accuracies.append(acc)
         print("\ncost:",sess.run(cost, feed_dict=feed))
-        print("acc:", acc)
+        print("acc: {0:.2f}%".format(acc * 100))
 # Mean training accuracy
 total = 0
 for num in accuracies:
@@ -167,11 +173,14 @@ is_training = False
 batch_images, batch_labels = next_batch(test_batch_size, test_images, test_labels)
 feed = {x: batch_images, y: batch_labels}
 print("\nCompleted {0} iterations in {1} seconds".format(training_iterations, total_time))
-print("Mean training accuracy:", mean_accuracy)
-print("given:",sess.run(y, feed_dict=feed))
+print("Mean training accuracy: {0:.2f}%".format(mean_accuracy * 100))
+print("\ngiven:",sess.run(y, feed_dict=feed))
 print("cost:",sess.run(cost, feed_dict=feed))
 print("prediction:", sess.run(pred, feed_dict=feed))
-print("acc:", sess.run(accuracy, feed_dict=feed))
+print("acc: {0:.2f}%".format(sess.run(accuracy, feed_dict=feed) * 100))
+confusion = tf.confusion_matrix(labels = y, predictions = pred, num_classes = num_classes)
+np.set_printoptions(threshold=np.nan)
+print(sess.run(confusion, feed_dict=feed))
 # TODO show individual accuracy of each category
 
 sess.close()
