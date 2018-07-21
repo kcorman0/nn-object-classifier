@@ -3,9 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 import os
+from datetime import datetime
 from tqdm import tqdm
-
-# Normalize the error based on the number of samples in the category
 
 # Go through each folder in a directory and add the images to an array.
 # The folder name becomes the label for its images
@@ -96,10 +95,13 @@ pooling_kernel2 = 2
 # Fully connected layer variables
 fc_size = 128
 dropout_rate = 0.25
-is_training = True # TODO change this variable when not training
+is_training = True
 # Training variables
-batch_size = 64
-learning_rate = 0.0001 # TODO temp value
+train_batch_size = 64
+learning_rate = 0.0005 # TODO temp value
+training_iterations = 10000
+# Testing variables
+test_batch_size = 256
 
 # Data
 train_images, train_labels, test_images, test_labels = load_data(directory)
@@ -107,7 +109,7 @@ train_images, train_labels, test_images, test_labels = load_data(directory)
 # Input (the greyscale image from the dataset)
 x = tf.placeholder(tf.float32, shape=[None, img_size, img_size], name="x")
 # Correct label for the input as an int
-y = tf.placeholder(tf.int32, shape=[None], name="y")
+y = tf.placeholder(tf.int64, shape=[None], name="y")
 # Correct label
 # y_label = argmax_to_label(y) TODO better way to do this
 # print("YYY",y_label)
@@ -123,22 +125,54 @@ conv2 = tf.layers.max_pooling2d(conv2, pooling_stride2, pooling_kernel2)
 fc1 = tf.layers.flatten(conv2)
 fc1 = tf.layers.dense(fc1, fc_size)
 fc1 = tf.layers.dropout(fc1, rate=dropout_rate, training=is_training)
+# TODO Normalize the error based on the number of samples in the category
 # Cost function
 cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=fc1, labels=y)
 cost = tf.reduce_mean(cross_entropy)
-# Train (TODO)
+# Train by minimizing the cost function
 train = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
 # Network's label prediction
 pred = tf.argmax(fc1, 1)
 # pred_labels = argmax_to_label(pred) TODO do this later in the program
+correct_pred = tf.equal(pred, y)
+accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
+# Start the Tensorflow session - nothing has been done with tensors until this points besides intializing
 sess = tf.Session()
-batch_images, batch_labels = next_batch(batch_size, train_images, train_labels)
 sess.run(tf.global_variables_initializer())
+start_time = datetime.now()
 
-print("given:",sess.run(y, feed_dict={x: batch_images, y: batch_labels}))
-print("cost:",sess.run(cost, feed_dict={x: batch_images, y: batch_labels}))
-print("prediction:", sess.run(pred, feed_dict={x: batch_images, y: batch_labels}))
+# Train the network (training_iterations) amount of times
+accuracies = []
+for i in range(training_iterations):
+    batch_images, batch_labels = next_batch(train_batch_size, train_images, train_labels)
+    feed = {x: batch_images, y: batch_labels}
+    sess.run(train, feed_dict=feed)
+
+    if i % 100 == 0:
+        acc = sess.run(accuracy, feed_dict=feed)
+        accuracies.append(acc)
+        print("\ncost:",sess.run(cost, feed_dict=feed))
+        print("acc:", acc)
+# Mean training accuracy
+total = 0
+for num in accuracies:
+    total += num
+mean_accuracy = total / len(accuracies)
+
+# Run the test data and come up with final numbers
+end_time = datetime.now()
+total_time = (end_time - start_time).total_seconds()
+is_training = False
+batch_images, batch_labels = next_batch(test_batch_size, test_images, test_labels)
+feed = {x: batch_images, y: batch_labels}
+print("\nCompleted {0} iterations in {1} seconds".format(training_iterations, total_time))
+print("Mean training accuracy:", mean_accuracy)
+print("given:",sess.run(y, feed_dict=feed))
+print("cost:",sess.run(cost, feed_dict=feed))
+print("prediction:", sess.run(pred, feed_dict=feed))
+print("acc:", sess.run(accuracy, feed_dict=feed))
+# TODO show individual accuracy of each category
 
 sess.close()
 
