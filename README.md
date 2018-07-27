@@ -1,1 +1,3 @@
-# nn-object-classifier
+Object Classifier
+
+The goal of this project is to create and train a convolutional neural network to to be able to classify images into (undecided categories)...
