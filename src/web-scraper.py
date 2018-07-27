@@ -6,6 +6,7 @@ from datetime import datetime
 import time
 import numpy as np
 
+
 # Method to create a folder at the given directory (the folder name is in the directory)
 def create_folder(directory):
     try:
@@ -17,22 +18,23 @@ def create_folder(directory):
 # Where the images will be stored
 download_directory = "/Users/kippc/Downloads/NN_Dataset/"
 # What it will scrape from Google images
-queries = ["City", "Ocean", "Desert", "Forest", "Grassland"]
+queries = ["Desert", "Forest", "Grassland"]
 # Number of images to scrape for each query
 num_images = 5000
+start_image = 0
 
 # Go through each query, make a folder in the directory and fill it with the first (num_images) results from Google Images
 start_time = datetime.now()
 for q in queries:
-    counter = 0
+    counter = start_image
     bad_images = 0
     print("Created folder " + q + " in " + download_directory)
     folder_directory = os.path.join(download_directory, q)
     create_folder(folder_directory)
-    while counter < num_images:
-        if counter % 260 == 0 and counter != 0:
-            print("Sleep for 1 minute")
-            time.sleep(60)
+    while counter < num_images + start_image:
+        if counter % 160 == 0 and counter != 0:
+            print("Sleep for 30 seconds")
+            time.sleep(30)
         url = "https://www.google.com/search?q=" + str(q) + "&safe=active&sout=1&tbm=isch&start=" + str(counter) + "&sa=N"
         html = requests.get(url)
         soup = BeautifulSoup(html.text, "html5lib")
