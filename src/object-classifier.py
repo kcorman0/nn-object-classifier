@@ -22,11 +22,11 @@ def load_data(root_directory):
         print("Subdirectory:", label)
         for img in tqdm(os.listdir(subdir)):
             path = os.path.join(subdir,img)
-            img = cv2.cv2.imread(path,cv2.cv2.IMREAD_GRAYSCALE)
+            img = cv2.cv2.imread(path,cv2.cv2.IMREAD_COLOR)
             
             if img is not None:
                 i += 1
-                img = cv2.cv2.resize(img, (img_size, img_size))
+                img = cv2.cv2.resize(img, img_shape)
                 label = subdir.split('/')[5:][0]
                 label = classes.index(label)
                 if i % (1 / test_percent) == 0:
@@ -45,7 +45,7 @@ def display_images(images, labels, pred_labels=None):
     fig, axes = plt.subplots(3, 3)
     fig.subplots_adjust(hspace=0.3, wspace=0.3)
     for i, ax in enumerate(axes.flat):
-        ax.imshow(images[i].reshape(img_shape), cmap="gray", vmin=0, vmax=255)
+        ax.imshow(images[i].reshape(img_size, img_size, 3)) #, cmap="gray", vmin=0, vmax=255
 
         if pred_labels is None:
             xlabel = "True: {0}".format(labels[i])
@@ -56,6 +56,9 @@ def display_images(images, labels, pred_labels=None):
         ax.set_xticks([])
         ax.set_yticks([])
     plt.show()
+
+# Displays 9 images the network incorrectly predicted
+# def display_incorrect_images():
 
 # TODO stop reusing same images (?)
 # Randomly selects the indicated number of images/labels for training
@@ -79,13 +82,13 @@ def argmax_to_label(prediction):
 
 # Constants
 # Data variables
-directory = "/Users/kippc/Downloads/PetImages/"
+directory = "/Users/kippc/Downloads/NN_Dataset/"
 test_percent = .1
 # Label variables
 classes = next(os.walk(directory))[1]
 num_classes = len(classes)
 # Image variables
-img_size = 50 # TODO temp value
+img_size = 100
 img_shape = (img_size, img_size)
 # Layer 1 variables
 filters = 16
@@ -103,16 +106,16 @@ dropout_rate = 0.25
 is_training = True
 # Training variables
 train_batch_size = 64
-learning_rate = 0.0001 # TODO temp value
-training_iterations = 10000
+learning_rate = 0.0002 # TODO temp value
+training_iterations = 5000
 # Testing variables
-test_batch_size = 256
+test_batch_size = 512
 
 # Data
 train_images, train_labels, test_images, test_labels = load_data(directory)
 
 # Input (the greyscale image from the dataset)
-x = tf.placeholder(tf.float32, shape=[None, img_size, img_size], name="x")
+x = tf.placeholder(tf.float32, shape=[None, img_size, img_size, 3], name="x")
 # Correct label for the input as an int
 y = tf.placeholder(tf.int64, shape=[None], name="y")
 # Correct label
@@ -120,7 +123,7 @@ y = tf.placeholder(tf.int64, shape=[None], name="y")
 # print("YYY",y_label)
 
 # Initialize layer 1
-x_reshape = tf.reshape(x, shape=[-1, img_size, img_size, 1])
+x_reshape = tf.reshape(x, shape=[-1, img_size, img_size, 3])
 conv1 = tf.layers.conv2d(x_reshape, filters, filter_size, activation=tf.nn.relu)
 conv1 = tf.layers.max_pooling2d(conv1, pool_size=pooling_kernel, strides=pooling_stride)
 # Initialize layer 2
@@ -181,7 +184,6 @@ print("acc: {0:.2f}%".format(sess.run(accuracy, feed_dict=feed) * 100))
 confusion = tf.confusion_matrix(labels = y, predictions = pred, num_classes = num_classes)
 np.set_printoptions(threshold=np.nan)
 print(sess.run(confusion, feed_dict=feed))
-# TODO show individual accuracy of each category
 
 sess.close()
 

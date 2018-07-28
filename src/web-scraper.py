@@ -16,7 +16,7 @@ def create_folder(directory):
         print("Error creating folder")
 
 # Where the images will be stored
-download_directory = "/Users/kippc/Downloads/NN_Dataset/"
+download_directory = "/Users/kippc/Downloads/"
 # What it will scrape from Google images
 queries = ["Desert", "Forest", "Grassland"]
 # Number of images to scrape for each query
