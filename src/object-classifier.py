@@ -39,6 +39,15 @@ def load_data(root_directory):
                 print("Image not loaded")
     return train_images, train_labels, test_images, test_labels
 
+# Randomly selects the indicated number of images/labels for the next training iteration
+def next_batch(size, images, labels):
+    n = np.arange(0, len(images))
+    np.random.shuffle(n)
+    n = n[0:size]
+    image_batch = [images[i] for i in n]
+    label_batch = [labels[i] for i in n]
+    return np.asarray(image_batch), np.asarray(label_batch)
+
 # Displays 9 images on a plt subplot
 def display_images(images, labels, pred_labels=None):
     assert len(images) == len(labels) == 9
@@ -51,14 +60,10 @@ def display_images(images, labels, pred_labels=None):
             xlabel = "True: {0}".format(labels[i])
         else:
             xlabel = "True: {0}, Pred: {1}".format(labels[i], pred_labels[i])
-
         ax.set_xlabel(xlabel)
         ax.set_xticks([])
         ax.set_yticks([])
     plt.show()
-
-# Displays 9 images the network incorrectly predicted
-# def display_incorrect_images():
 
 # Saves the important constant values and the test results to a text file
 def write_to_txt(mean_acc, last_acc, test_acc, test_cost, confusion_matrix):
@@ -71,30 +76,29 @@ def write_to_txt(mean_acc, last_acc, test_acc, test_cost, confusion_matrix):
         .format(mean_acc, last_acc, test_acc, test_cost, confusion_matrix))
     f.close()
 
-# TODO stop reusing same images (?)
-# Randomly selects the indicated number of images/labels for training
-def next_batch(size, images, labels):
-    n = np.arange(0, len(images))
-    np.random.shuffle(n)
-    n = n[0:size]
-    image_batch = [images[i] for i in n]
-    label_batch = [labels[i] for i in n]
-    return np.asarray(image_batch), np.asarray(label_batch)
-
-# Change the network's output (which is an int) to a string representing the category it predicted TODO use to display incorrect images
-def argmax_to_label(prediction):
+# Change the network's output (which is an int) to a string representing the category it predicted
+def argmax_to_labels(predictions):
     labels = []
-    for pred in prediction:
+    for pred in predictions:
         labels.append(classes[pred])
     return labels
 
-# Creates a confusion matrix thats shows the accuracy of each category
-# def confusion_matrix(confusion):
+# Correctly formats the confusion matrix using data labels
+def format_confusion(confusion):
+    width = 10
+    for i in classes:
+        print("\t\t" + i, end='')
+    print()
+    for idx, row in enumerate(confusion):
+        print(classes[idx], end='')
+        for i in row:
+            print("\t\t{0}".format(i), end='')
+        print()
 
 # Data variables
-directory = "/Users/kippc/Downloads/NN_Dataset/"
-txt_directory = "/Users/kippc/Documents/Visual Studio Code/Tensorflow/object-classifier/"
-test_percent = .1
+directory = "/Users/kipp/Downloads/NN_Dataset2/"
+txt_directory = "/Users/kipp/Desktop/Deep Learning/Tensorflow/nn-object-classifier/"
+test_percent = .2
 # Label variables
 classes = next(os.walk(directory))[1]
 num_classes = len(classes)
@@ -102,12 +106,12 @@ num_classes = len(classes)
 img_size = 100
 img_shape = (img_size, img_size)
 # Layer 1 variables
-filters = 32
+filters = 64
 filter_size = 5
 pooling_stride = 2
 pooling_kernel = 2
 # Layer 2 variables
-filters2 = 64
+filters2 = 32
 filter2_size = 5
 pooling_stride2 = 2
 pooling_kernel2 = 2
@@ -117,15 +121,15 @@ dropout_rate = 0.2
 is_training = True
 # Training variables
 train_batch_size = 64
-learning_rate = 0.0001 # TODO temp value
-training_iterations = 2000
+learning_rate = 0.00003 # TODO temp value
+training_iterations = 5000
 # Testing variables
-test_batch_size = 64
+test_batch_size = 128
 
 # Data
 train_images, train_labels, test_images, test_labels = load_data(directory)
 
-# Input (the greyscale image from the dataset)
+# Input (the RGB values from the image in the dataset)
 x = tf.placeholder(tf.float32, shape=[None, img_size, img_size, 3], name="x")
 # Correct label for the input as an int
 y = tf.placeholder(tf.int64, shape=[None], name="y")
@@ -153,29 +157,29 @@ correct_pred = tf.equal(pred, y)
 accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
 # Start the Tensorflow session - nothing has been done with tensors until this points besides intializing
-# gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.9)
-# config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=True)
-# config.gpu_options.allow_growth = True
-# config.gpu_options.allocator_type = 'BFC'
-
-sess = tf.Session()
+gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.9)
+sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
 sess.run(tf.global_variables_initializer())
 start_time = datetime.now()
 
 # Train the network (training_iterations) amount of times, printing the accuracy and cost every 100 iterations
 accuracies = []
+temp = 0
 for i in range(training_iterations):
     batch_images, batch_labels = next_batch(train_batch_size, train_images, train_labels)
     feed = {x: batch_images, y: batch_labels}
     sess.run(train, feed_dict=feed)
 
     if i % 100 == 0 or i == training_iterations - 1:
+        temp += 1
         acc = sess.run(accuracy, feed_dict=feed)
         accuracies.append(acc)
         # epoch = i * train_batch_size / len(train_images)
         print("\nIteration {0}".format(i))
         print("Cost: {0:.4f}".format(sess.run(cost, feed_dict=feed)))
         print("Acc: {0:.2f}%".format(acc * 100))
+        # if acc == 1 and accuracies[temp - 1] == 1:
+        #     break
 mean_accuracy = sum(accuracies) / len(accuracies)
 end_time = datetime.now()
 total_time = (end_time - start_time).total_seconds()
@@ -200,15 +204,23 @@ while i < test_len:
 test_acc = sum(accuracies) / len(accuracies)
 test_cost = sum(costs) / len(costs)
 
+# Print the test results
 confusion = tf.confusion_matrix(labels = test_labels, predictions = test_preds, num_classes = num_classes)
 confusion = sess.run(confusion, feed_dict=feed)
 np.set_printoptions(threshold=np.nan)
 print("\nTest data\nCost: {0:.4f}".format(test_cost))
-print("Accuracy: {0:.2f}%".format(test_acc * 100))
-print(confusion)
-
+print("Accuracy: {0:.2f}%\n".format(test_acc * 100))
+format_confusion(confusion)
+# Write the results to a text file
 write_to_txt(mean_accuracy, acc, test_acc, test_cost, confusion)
 sess.close()
 
-# Print first 9 images (for testing)
-display_images(images=train_images[0:9], labels=train_labels[0:9])
+incorrect_images, incorrect_labels, correct_labels = [], [], []
+for i in range(test_len):
+    if test_preds[i] != test_labels[i]:
+        incorrect_images.append(test_images[i])
+        incorrect_labels.append(test_preds[i])
+        correct_labels.append(test_labels[i])
+incorrect_labels = argmax_to_labels(incorrect_labels)
+correct_labels = argmax_to_labels(correct_labels)
+display_images(images=incorrect_images[0:9], labels=correct_labels[0:9], pred_labels=incorrect_labels[0:9])

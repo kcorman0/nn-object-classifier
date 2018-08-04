@@ -13,13 +13,13 @@ def create_folder(directory):
         print("Error creating folder")
 
 # Where the images will be stored
-download_directory = "/Users/kippc/Downloads/NN_Dataset/"
+download_directory = "/Users/kipp/Downloads/NN_Dataset2/"
 # What it will scrape from the Unsplash API
-queries = ["Space", "City", "Fields", "Mountains", "Ocean", "Forest"]
+queries = ["Urban", "Nature"]
 # The starting image for each query
-starting_points = {"Space" : 0, "City" : 0, "Fields" : 0, "Mountains" : 0, "Ocean" : 0, "Forest" : 0}
+starting_points = {"Urban": 0, "Nature": 0}
 # Number of images to scrape for each query
-num_images = 50
+num_images = 12000
 
 # Go through each query, make a folder in the directory and fill it with (num_images) results from Unsplash
 start_time = datetime.now()
