@@ -1,16 +1,36 @@
-Img size: 100	Layer 1 (filter: 64 Size: 5 Stride: 2)	Layer 2 (filter: 32 Size: 5 Stride: 2)	FC nodes: 1024
-Learning rate: 1e-05 Training iterations: 10000
-Mean acc: 0.7771381578947368	Last acc: 1.0	Test acc: 0.8031303929655176	Test cost: 0.6107966350881677
-[[1960  438]
- [ 483 1916]]
-
-Img size: 100	Layer 1 (filter: 64 Size: 5 Stride: 2)	Layer 2 (filter: 32 Size: 5 Stride: 2)	FC nodes: 1024
-Learning rate: 1e-05 Training iterations: 10000
-Mean acc: 0.9382735148514851	Last acc: 1.0	Test acc: 0.8394797507085299	Test cost: 0.6626048821367716
-[[2129  269]
- [ 484 1915]]Img size: 100	Layer 1 (filter: 64 Size: 5 Stride: 2)	Layer 2 (filter: 32 Size: 5 Stride: 2)	FC nodes: 1024
+Img size: 128	Layer 1 (filter: 64 Size: 3 Stride: 2)	Layer 2 (filter: 128 Size: 3 Stride: 2)	FC nodes: 2048
 Learning rate: 3e-05 Training iterations: 5000
-Mean acc: 0.9476102941176471	Last acc: 0.984375	Test acc: 0.8259106717611614	Test cost: 0.7512583356154593
-[[1940  458]
- [ 370 2029]]
+Mean acc: 0.883578431372549	Last acc: 0.984375	Test acc: 0.8754222972972973	Test cost: 0.49109778754614497
+[[1940  423]
+ [ 173 2200]]
+
+Img size: 128	Layer 1 (filter: 64 Size: 3 Stride: 2)	Layer 2 (filter: 128 Size: 3 Stride: 2)	FC nodes: 2048
+Learning rate: 0.0001 Training iterations: 5000
+Mean acc: 0.8661151960784313	Last acc: 0.875	Test acc: 0.832981418918919	Test cost: 0.40653795487171895
+[[1949  414]
+ [ 390 1983]]
+
+Img size: 128	Layer 1 (filter: 64 Size: 3 Stride: 2)	Layer 2 (filter: 128 Size: 3 Stride: 2)	FC nodes: 2048
+Learning rate: 0.001 Training iterations: 5000
+Mean acc: 0.5064338235294118	Last acc: 0.4375	Test acc: 0.49303209459459457	Test cost: 0.6933999045475109
+[[ 777 1586]
+ [ 772 1601]]
+
+Img size: 128	Layer 1 (filter: 64 Size: 3 Stride: 2)	Layer 2 (filter: 128 Size: 3 Stride: 2)	FC nodes: 2048
+Learning rate: 2.5e-05 Training iterations: 5000
+Mean acc: 0.8952205882352942	Last acc: 1.0	Test acc: 0.8845016891891891	Test cost: 0.4346998164782653
+[[2101  262]
+ [ 287 2086]]
+
+Img size: 128	Layer 1 (filter: 64 Size: 3 Stride: 2)	Layer 2 (filter: 128 Size: 3 Stride: 2)	FC nodes: 2048
+Learning rate: 2.5e-05 Training iterations: 1000
+Mean acc: 0.7769886363636364	Last acc: 0.875	Test acc: 0.8165118243243243	Test cost: 0.4351557227405342
+[[1968  395]
+ [ 484 1889]]
+
+Img size: 128	Layer 1 (filter: 64 Size: 3 Stride: 2)	Layer 2 (filter: 128 Size: 3 Stride: 2)	FC nodes: 2048
+Learning rate: 2.5e-05 Training iterations: 5000
+Mean acc: 0.883578431372549	Last acc: 0.96875	Test acc: 0.8809121621621622	Test cost: 0.4210486285187103
+[[2154  209]
+ [ 346 2027]]
 

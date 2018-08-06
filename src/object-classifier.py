@@ -11,12 +11,10 @@ from tqdm import tqdm
 def load_data(root_directory):
     subdirs = [x[0] for x in os.walk(root_directory)]
     subdirs.remove(root_directory)
-    train_images = []
-    train_labels = []
-    test_images = []
-    test_labels = []
-    i = 0
 
+    train_images, train_labels = [], []
+    test_images, test_labels = [], []
+    i = 0
     for subdir in subdirs:
         label = subdir.split('/')[5:][0]
         print("Subdirectory:", label)
@@ -60,9 +58,23 @@ def display_images(images, labels, pred_labels=None):
             xlabel = "True: {0}".format(labels[i])
         else:
             xlabel = "True: {0}, Pred: {1}".format(labels[i], pred_labels[i])
-        ax.set_xlabel(xlabel)
+        ax.set_xlabel(xlabel, fontsize=8.0)
         ax.set_xticks([])
         ax.set_yticks([])
+    plt.show()
+
+# Display a graph of accuracy vs. # of iterations
+def display_graphs(accuracies, costs):
+    x = []
+    for i in range(0, training_iterations + 1, 100):
+        x.append(i)
+
+    fig, (axes1, axes2) = plt.subplots(2, 1, sharex=True)
+    axes1.plot(x, accuracies)
+    axes1.set_ylabel("Accuracy")
+    axes2.plot(x, costs)
+    axes2.set_ylabel("Cost")
+    axes2.set_xlabel("Iterations")
     plt.show()
 
 # Saves the important constant values and the test results to a text file
@@ -103,25 +115,26 @@ test_percent = .2
 classes = next(os.walk(directory))[1]
 num_classes = len(classes)
 # Image variables
-img_size = 100
+img_size = 128
 img_shape = (img_size, img_size)
 # Layer 1 variables
 filters = 64
-filter_size = 5
+filter_size = 3
 pooling_stride = 2
 pooling_kernel = 2
 # Layer 2 variables
-filters2 = 32
-filter2_size = 5
+filters2 = 128
+filter2_size = 3
 pooling_stride2 = 2
 pooling_kernel2 = 2
 # Fully connected layer variables
-fc_size = 1024
+fc_size = 2048
+fc2_size = 2048
 dropout_rate = 0.2
 is_training = True
 # Training variables
 train_batch_size = 64
-learning_rate = 0.00003 # TODO temp value
+learning_rate = 0.000025 # TODO temp value
 training_iterations = 5000
 # Testing variables
 test_batch_size = 128
@@ -145,14 +158,16 @@ conv2 = tf.layers.max_pooling2d(conv2, pool_size=pooling_kernel2, strides=poolin
 fc1 = tf.layers.flatten(conv2)
 fc1 = tf.layers.dense(fc1, fc_size, activation=tf.nn.relu)
 fc1 = tf.layers.dropout(fc1, rate=dropout_rate, training=is_training)
-fc2 = tf.layers.dense(fc1, num_classes)
+fc2 = tf.layers.dense(fc1, fc2_size, activation=tf.nn.relu)
+fc2 = tf.layers.dropout(fc2, rate=dropout_rate, training=is_training)
+output = tf.layers.dense(fc2, num_classes)
 # Cost function
-cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=fc2, labels=y)
+cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=output, labels=y)
 cost = tf.reduce_mean(cross_entropy)
 # Train by minimizing the cost function
 train = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
 # Network's label prediction
-pred = tf.argmax(fc2, 1)
+pred = tf.argmax(output, 1)
 correct_pred = tf.equal(pred, y)
 accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
@@ -163,29 +178,28 @@ sess.run(tf.global_variables_initializer())
 start_time = datetime.now()
 
 # Train the network (training_iterations) amount of times, printing the accuracy and cost every 100 iterations
-accuracies = []
-temp = 0
+accuracies, costs = [], []
 for i in range(training_iterations):
     batch_images, batch_labels = next_batch(train_batch_size, train_images, train_labels)
     feed = {x: batch_images, y: batch_labels}
     sess.run(train, feed_dict=feed)
 
     if i % 100 == 0 or i == training_iterations - 1:
-        temp += 1
         acc = sess.run(accuracy, feed_dict=feed)
+        tcost = sess.run(cost, feed_dict=feed)
         accuracies.append(acc)
+        costs.append(tcost)
         # epoch = i * train_batch_size / len(train_images)
         print("\nIteration {0}".format(i))
-        print("Cost: {0:.4f}".format(sess.run(cost, feed_dict=feed)))
+        print("Cost: {0:.4f}".format(tcost))
         print("Acc: {0:.2f}%".format(acc * 100))
-        # if acc == 1 and accuracies[temp - 1] == 1:
-        #     break
 mean_accuracy = sum(accuracies) / len(accuracies)
 end_time = datetime.now()
 total_time = (end_time - start_time).total_seconds()
 is_training = False
 print("\nCompleted {0} iterations in {1:.2f} seconds".format(training_iterations, total_time))
 print("Mean training accuracy: {0:.2f}%".format(mean_accuracy * 100))
+display_graphs(accuracies, costs)
 
 # Run the test data and come up with final numbers
 test_len = len(test_images)
@@ -214,7 +228,7 @@ format_confusion(confusion)
 # Write the results to a text file
 write_to_txt(mean_accuracy, acc, test_acc, test_cost, confusion)
 sess.close()
-
+# Display all the incorrect images
 incorrect_images, incorrect_labels, correct_labels = [], [], []
 for i in range(test_len):
     if test_preds[i] != test_labels[i]:
@@ -223,4 +237,8 @@ for i in range(test_len):
         correct_labels.append(test_labels[i])
 incorrect_labels = argmax_to_labels(incorrect_labels)
 correct_labels = argmax_to_labels(correct_labels)
-display_images(images=incorrect_images[0:9], labels=correct_labels[0:9], pred_labels=incorrect_labels[0:9])
+
+i = 0
+while i < len(incorrect_images) - 9:
+    display_images(images=incorrect_images[i:i+9], labels=correct_labels[i:i+9], pred_labels=incorrect_labels[i:i+9])
+    i += 9
