@@ -6,18 +6,19 @@ import os
 from datetime import datetime
 from tqdm import tqdm
 
+# Converts each image to a 128x128x3 2D matrix with the RGB values of each pixel
 # Each folder in root_directory becomes a category where the folder name is used as the image's label
 # Splits all images into 10% testing, 10% validation, and 80% training
 def load_data(root_directory):
     subdirs = [x[0] for x in os.walk(root_directory)]
     subdirs.remove(root_directory)
-
     train_images, train_labels = [], []
     test_images, test_labels = [], []
     val_images, val_labels = [], []
+
     i = 0
     for subdir in subdirs:
-        label = subdir.split('/')[5:][0]
+        label = subdir.split('/')[5:][0] # This will depend on the directory
         print("Subdirectory:", label)
         for img in tqdm(os.listdir(subdir)):
             path = os.path.join(subdir,img)
@@ -29,6 +30,7 @@ def load_data(root_directory):
                 img = normalize_data(img)
                 label = subdir.split('/')[5:][0]
                 label = classes.index(label)
+
                 if i % 10 == 0:
                     test_images.append(np.array(img))
                     test_labels.append(np.array(label))
@@ -42,7 +44,7 @@ def load_data(root_directory):
                 print("\nImage not loaded")
     return train_images, train_labels, val_images, val_labels, test_images, test_labels
 
-# Normalizes the RGB values of an image to be between 0 and 1
+# Normalizes all RGB values of an image to be between 0 and 1
 def normalize_data(image):
     image = image.astype('float32')
     image /= 255
@@ -75,7 +77,7 @@ def display_images(images, labels, pred_labels=None):
         ax.set_yticks([])
     plt.show()
 
-# Displays graphs of accuracy vs. iterations and cost vs. iterations side by side on a plt subplot
+# Displays graphs of accuracy vs. iteration and cost vs. iteration on 1 plt subplot
 def display_graphs(accuracies, costs):
     x = []
     for i in range(1, training_iterations + 1, 100):
@@ -89,7 +91,7 @@ def display_graphs(accuracies, costs):
     axes2.set_xlabel("Iterations")
     plt.show()
 
-# Saves the important constant values and the test results to a text file
+# Saves the important constant values and test results to a text file located in txt_directory
 def write_to_txt(mean_acc, last_acc, test_acc, test_cost, confusion_matrix):
     f = open(os.path.join(txt_directory, "past_data.txt"), "a")
     f.write("Img size: {0}\tLayer 1 (filter: {1} Size: {2} Stride: {3})\tLayer 2 (filter: {4} Size: {5} Stride: {6})\n"
@@ -100,7 +102,7 @@ def write_to_txt(mean_acc, last_acc, test_acc, test_cost, confusion_matrix):
         .format(mean_acc, last_acc, test_acc, test_cost, confusion_matrix))
     f.close()
 
-# Change the network's output (which is an int) to a string representing the category it predicted
+# Change the network's output from an int to a string of the actual label (ex. 0 becomes Nature)
 def argmax_to_labels(predictions):
     labels = []
     for pred in predictions:
@@ -122,26 +124,26 @@ def format_confusion(confusion):
 # Data variables
 directory = "/Users/kipp/Downloads/NN_Dataset2/"
 txt_directory = "/Users/kipp/Desktop/Deep Learning/Tensorflow/nn-object-classifier/"
-# Label variables
-classes = next(os.walk(directory))[1]
-num_classes = len(classes)
 # Image variables
 img_size = 128
 img_shape = (img_size, img_size)
-# Layer 1 variables
+# Label variables
+classes = next(os.walk(directory))[1]
+num_classes = len(classes)
+# 1st convolutional layer variables
 filters = 64
 filter_size = 3
 pooling_stride = 2
 pooling_kernel = 2
-# Layer 2 variables
+# 2nd convolutional layer variables
 filters2 = 256
 filter2_size = 3
 pooling_stride2 = 2
 pooling_kernel2 = 2
-# Fully connected layer variables
+# Fully connected layers variables
 fc_size = 1024
 fc2_size = 1024
-dropout_rate = 0.2
+dropout_rate = 0.4
 is_training = True
 # Training variables
 train_batch_size = 64
@@ -152,34 +154,30 @@ test_batch_size = 128
 # Validation variables
 val_batch_size = 128
 
-# Data
+# Import data
 train_images, train_labels, val_images, val_labels, test_images, test_labels = load_data(directory)
 
 # Input (the RGB values from the image in the dataset)
 x = tf.placeholder(tf.float32, shape=[None, img_size, img_size, 3], name="x")
-# Correct label for the input as an int
+# Correct label for the input as an int     
 y = tf.placeholder(tf.int64, shape=[None], name="y")
 
-# Initialize layer 1
+# Initialize convolutional layer 1 and max pooling
 x_reshape = tf.reshape(x, shape=[-1, img_size, img_size, 3])
-conv1 = tf.layers.conv2d(x_reshape, filters, filter_size, kernel_initializer='he_normal', activation=tf.nn.relu)
+conv1 = tf.layers.conv2d(x_reshape, filters=filters, kernel_size=filter_size, activation=tf.nn.relu)
 conv1 = tf.layers.max_pooling2d(conv1, pool_size=pooling_kernel, strides=pooling_stride)
-# Initialize layer 2
-conv2 = tf.layers.conv2d(conv1, filters2, filter2_size, kernel_initializer='he_normal', activation=tf.nn.relu)
+# Initialize convolutional layer 2 and max pooling
+conv2 = tf.layers.conv2d(conv1, filters=filters2, kernel_size=filter2_size, activation=tf.nn.relu)
 conv2 = tf.layers.max_pooling2d(conv2, pool_size=pooling_kernel2, strides=pooling_stride2)
-# Initialize fully connected layers
+# Initialize 2 fully connected layers with dropout. If is_training is false, dropout will not be used
 fc1 = tf.layers.flatten(conv2)
-fc1 = tf.layers.dense(fc1, fc_size, activation=tf.nn.relu)
+fc1 = tf.layers.dense(fc1, units=fc_size, activation=tf.nn.relu)
 fc1 = tf.layers.dropout(fc1, rate=dropout_rate, training=is_training)
-fc2 = tf.layers.dense(fc1, fc2_size, activation=tf.nn.relu)
+fc2 = tf.layers.dense(fc1, units=fc2_size, activation=tf.nn.relu)
 fc2 = tf.layers.dropout(fc2, rate=dropout_rate, training=is_training)
-fc3 = tf.layers.dense(fc2, 1024, activation=tf.nn.relu)
-fc3 = tf.layers.dropout(fc3, rate=dropout_rate, training=is_training)
-fc4 = tf.layers.dense(fc3, 1024, activation=tf.nn.relu)
-fc4 = tf.layers.dropout(fc4, rate=dropout_rate, training=is_training)
-output = tf.layers.dense(fc4, num_classes)
+output = tf.layers.dense(fc2, units=num_classes)
 s_output = tf.nn.softmax(output)
-# Cost function
+# Cost function (sparse doesn't use one hot labels)
 cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=output, labels=y)
 cost = tf.reduce_mean(cross_entropy)
 # Train by minimizing the cost function
@@ -189,13 +187,15 @@ pred = tf.argmax(s_output, 1)
 correct_pred = tf.equal(pred, y)
 accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
-# Start the Tensorflow session - nothing has been done with tensors until this points besides intializing
+# Only allow Tensorflow to utilize 90% of GPU
 gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.9)
+# Start the Tensorflow session - nothing has been done with tensors until this point besides intializing
 sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
 sess.run(tf.global_variables_initializer())
 start_time = datetime.now()
 
-# Train the network (training_iterations) amount of times, printing the accuracy and cost every 100 iterations
+# Train the network until it reaches the desired number of iterations, or until the validation data returns 94% acc and < .4 cost
+# Every 100 iterations the accuracy and cost is printed for the test data, every 500 iterations they are printed for the validation data
 accuracies, costs = [], []
 for i in range(1, training_iterations + 1):
     batch_images, batch_labels = next_batch(train_batch_size, train_images, train_labels)
@@ -211,12 +211,17 @@ for i in range(1, training_iterations + 1):
         print("Acc: {0:.2f}%".format(acc * 100))
 
     if i % 500 == 0:
+        is_training = False
         batch_images, batch_labels = next_batch(val_batch_size, val_images, val_labels)
         feed = {x: batch_images, y: batch_labels}
-
         val_acc, val_cost = sess.run([accuracy, cost], feed_dict=feed)
         print("\nValidation acc: {0:.2f}%".format(val_acc * 100))
         print("Cost: {0:.4f}".format(val_cost))
+
+        if val_acc > .94 and val_cost < .4:
+            training_iterations = i
+            break
+        is_training = True
 mean_accuracy = sum(accuracies) / len(accuracies)
 end_time = datetime.now()
 total_time = (end_time - start_time).total_seconds()
@@ -225,14 +230,14 @@ print("\nCompleted {0} iterations in {1:.2f} seconds".format(training_iterations
 print("Mean training accuracy: {0:.2f}%".format(mean_accuracy * 100))
 display_graphs(accuracies, costs)
 
-# Run the test data and come up with final numbers
+# Run test data and come up with the final accuracy and cost
 test_len = len(test_images)
 test_preds = np.zeros(shape=test_len, dtype=int)
 accuracies, costs = [], []
+
 i = 0
 while i < test_len:
-    # Since the assigned batch size might not divide perfectly into the number of test images
-    end = min(i + test_batch_size, test_len)
+    end = min(i + test_batch_size, test_len) # Since the assigned batch size might not divide perfectly into the number of test images
     batch_images, batch_labels = test_images[i:end], test_labels[i:end]
     feed = {x: batch_images, y: batch_labels}
     test_preds[i:end] = sess.run(pred, feed_dict=feed)
@@ -241,20 +246,20 @@ while i < test_len:
     i = end
 test_acc = sum(accuracies) / len(accuracies)
 test_cost = sum(costs) / len(costs)
-
 # Print the test results
-confusion = tf.confusion_matrix(labels = test_labels, predictions = test_preds, num_classes = num_classes)
+confusion = tf.confusion_matrix(labels=test_labels, predictions=test_preds, num_classes=num_classes)
 confusion = sess.run(confusion, feed_dict=feed)
-np.set_printoptions(threshold=np.nan)
+np.set_printoptions(threshold=np.nan) # To stop it from abbreviating big matrixes
 print("\nTest data\nCost: {0:.4f}".format(test_cost))
 print("Accuracy: {0:.2f}%\n".format(test_acc * 100))
 format_confusion(confusion)
 
 # Write the results to a text file
 write_to_txt(mean_accuracy, acc, test_acc, test_cost, confusion)
+
 sess.close()
 
-# Display all the incorrect images
+# Display all the incorrect images 9 at a time
 incorrect_images, incorrect_labels, correct_labels = [], [], []
 for i in range(test_len):
     if test_preds[i] != test_labels[i]:
@@ -263,6 +268,7 @@ for i in range(test_len):
         correct_labels.append(test_labels[i])
 incorrect_labels = argmax_to_labels(incorrect_labels)
 correct_labels = argmax_to_labels(correct_labels)
+
 i = 0
 while i < len(incorrect_images) - 9:
     display_images(images=incorrect_images[i:i+9], labels=correct_labels[i:i+9], pred_labels=incorrect_labels[i:i+9])

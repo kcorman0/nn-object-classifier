@@ -2,9 +2,101 @@ Img size: 128	Layer 1 (filter: 64 Size: 3 Stride: 2)	Layer 2 (filter: 256 Size: 
 FC1 size: 1024	FC2 size: 1024	Learning rate: 4e-05	Training iterations: 5000
 Mean acc: 0.9484375	Last acc: 1.0	Test acc: 0.8955592105263158	Test cost: 0.45675875756301376
 [[1064  117]
- [ 125 1062]]Img size: 128	Layer 1 (filter: 64 Size: 3 Stride: 2)	Layer 2 (filter: 256 Size: 3 Stride: 2)
+ [ 125 1062]]
+
+Img size: 128	Layer 1 (filter: 64 Size: 3 Stride: 2)	Layer 2 (filter: 256 Size: 3 Stride: 2)
 FC1 size: 1024	FC2 size: 1024	Learning rate: 4e-05	Training iterations: 5000
 Mean acc: 0.9521875	Last acc: 0.984375	Test acc: 0.8930921052631579	Test cost: 0.5584231889561603
 [[1044  137]
  [ 127 1060]]
+
+Img size: 128	Layer 1 (filter: 64 Size: 3 Stride: 2)	Layer 2 (filter: 256 Size: 3 Stride: 2)
+FC1 size: 1024	FC2 size: 2048	Learning rate: 4e-05	Training iterations: 5000
+Mean acc: 0.959375	Last acc: 1.0	Test acc: 0.8791118421052632	Test cost: 0.49733808793519674
+[[1094   87]
+ [ 202  985]]
+
+Img size: 128	Layer 1 (filter: 64 Size: 3 Stride: 2)	Layer 2 (filter: 256 Size: 3 Stride: 2)
+FC1 size: 256	FC2 size: 256	Learning rate: 4e-05	Training iterations: 5000
+Mean acc: 0.933125	Last acc: 1.0	Test acc: 0.8828125	Test cost: 0.3669162247526018
+[[1090   91]
+ [ 177 1010]]
+
+Img size: 128	Layer 1 (filter: 64 Size: 3 Stride: 2)	Layer 2 (filter: 256 Size: 3 Stride: 2)
+FC1 size: 1024	FC2 size: 1024	Learning rate: 4e-05	Training iterations: 10000
+Mean acc: 0.9753125	Last acc: 1.0	Test acc: 0.8873355263157895	Test cost: 0.5495610056739104
+[[1068  113]
+ [ 148 1039]]
+
+Img size: 128	Layer 1 (filter: 64 Size: 3 Stride: 2)	Layer 2 (filter: 256 Size: 3 Stride: 2)
+FC1 size: 1024	FC2 size: 1024	Learning rate: 4e-05	Training iterations: 5000
+Mean acc: 0.94375	Last acc: 1.0	Test acc: 0.8836348684210527	Test cost: 0.4447565713995381
+[[ 997  184]
+ [  88 1099]]
+
+Img size: 128	Layer 1 (filter: 64 Size: 3 Stride: 2)	Layer 2 (filter: 256 Size: 3 Stride: 2)
+FC1 size: 1024	FC2 size: 1024	Learning rate: 4e-05	Training iterations: 5000
+Mean acc: 0.9628125	Last acc: 1.0	Test acc: 0.8935032894736842	Test cost: 0.44086579586330216
+[[1073  108]
+ [ 141 1046]]
+
+Img size: 128	Layer 1 (filter: 64 Size: 3 Stride: 2)	Layer 2 (filter: 256 Size: 3 Stride: 2)
+FC1 size: 1024	FC2 size: 1024	Learning rate: 4e-05	Training iterations: 1500
+Mean acc: 0.8604166666666667	Last acc: 0.96875	Test acc: 0.8651315789473685	Test cost: 0.32825145674379247
+[[1088   93]
+ [ 223  964]]
+
+Img size: 128	Layer 1 (filter: 64 Size: 3 Stride: 2)	Layer 2 (filter: 256 Size: 3 Stride: 2)
+FC1 size: 1024	FC2 size: 1024	Learning rate: 4e-05	Training iterations: 5000
+Mean acc: 0.8321875	Last acc: 0.921875	Test acc: 0.8782894736842105	Test cost: 0.29730639724354996
+[[1028  153]
+ [ 140 1047]]
+
+Img size: 128	Layer 1 (filter: 64 Size: 3 Stride: 2)	Layer 2 (filter: 256 Size: 3 Stride: 2)
+FC1 size: 1024	FC2 size: 1024	Learning rate: 4e-05	Training iterations: 5000
+Mean acc: 0.713125	Last acc: 0.75	Test acc: 0.756578947368421	Test cost: 0.5069823594469773
+[[864 317]
+ [272 915]]
+
+Img size: 128	Layer 1 (filter: 64 Size: 3 Stride: 2)	Layer 2 (filter: 256 Size: 3 Stride: 2)
+FC1 size: 1024	FC2 size: 1024	Learning rate: 0.0001	Training iterations: 5000
+Mean acc: 0.97	Last acc: 1.0	Test acc: 0.8692434210526315	Test cost: 0.5668323087064844
+[[1124   57]
+ [ 238  949]]
+
+Img size: 128	Layer 1 (filter: 64 Size: 3 Stride: 2)	Layer 2 (filter: 256 Size: 3 Stride: 2)
+FC1 size: 1024	FC2 size: 1024	Learning rate: 2.5e-05	Training iterations: 5000
+Mean acc: 0.940625	Last acc: 1.0	Test acc: 0.8865131578947368	Test cost: 0.4377594429411386
+[[1103   78]
+ [ 180 1007]]
+
+Img size: 128	Layer 1 (filter: 64 Size: 3 Stride: 2)	Layer 2 (filter: 256 Size: 3 Stride: 2)
+FC1 size: 1024	FC2 size: 1024	Learning rate: 2.5e-05	Training iterations: 3000
+Mean acc: 0.9098958333333333	Last acc: 1.0	Test acc: 0.8774671052631579	Test cost: 0.3652281263156941
+[[ 952  229]
+ [  76 1111]]
+
+Img size: 128	Layer 1 (filter: 64 Size: 5 Stride: 2)	Layer 2 (filter: 256 Size: 3 Stride: 2)
+FC1 size: 1024	FC2 size: 1024	Learning rate: 4e-05	Training iterations: 5000
+Mean acc: 0.961875	Last acc: 1.0	Test acc: 0.8898026315789473	Test cost: 0.41404201796180323
+[[1083   98]
+ [ 147 1040]]
+
+Img size: 128	Layer 1 (filter: 64 Size: 3 Stride: 2)	Layer 2 (filter: 256 Size: 3 Stride: 2)
+FC1 size: 1024	FC2 size: 1024	Learning rate: 4e-05	Training iterations: 5000
+Mean acc: 0.96	Last acc: 0.984375	Test acc: 0.8922697368421053	Test cost: 0.4035712986400253
+[[1095   86]
+ [ 151 1036]]
+
+Img size: 128	Layer 1 (filter: 64 Size: 3 Stride: 2)	Layer 2 (filter: 256 Size: 3 Stride: 2)
+FC1 size: 1024	FC2 size: 1024	Learning rate: 4e-05	Training iterations: 5000
+Mean acc: 0.945	Last acc: 1.0	Test acc: 0.8976151315789473	Test cost: 0.3918843245819995
+[[1007  174]
+ [  76 1111]]
+
+Img size: 128	Layer 1 (filter: 64 Size: 3 Stride: 2)	Layer 2 (filter: 256 Size: 3 Stride: 2)
+FC1 size: 1024	FC2 size: 512	Learning rate: 4e-05	Training iterations: 5000
+Mean acc: 0.94375	Last acc: 1.0	Test acc: 0.890625	Test cost: 0.36682028990042836
+[[1055  126]
+ [ 135 1052]]
 
