@@ -28,4 +28,5 @@ Test results from the same run as the graph:
 ![](https://puu.sh/BeT2Y/37ddbc3f18.png)
 
 Some runs had way more incorrect nature images (like this one) and others had way more incorrect urban images. It seemed to depend on the initial weights.
-My final accuracy was 89.76% on images it had never seen before. This number could definitely be improved with further testing or access to additional hardware, though it feels like getting an extremely high percentage on this dataset would be very challenging since I generated it myself. It would be hard to make a network that can classify a skyscraper and a close up image of graffiti on a wall as being the same.
+
+The testing accuracy was usually around 90% on images it had never seen before. This number could definitely be improved with further testing or access to additional hardware, though it feels like getting an extremely high percentage on this dataset would be very challenging since I generated it myself. It would be hard to make a network that can classify a skyscraper and a close up image of graffiti on a wall as being the same.
