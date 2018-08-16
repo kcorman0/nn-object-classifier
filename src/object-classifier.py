@@ -143,7 +143,7 @@ pooling_kernel2 = 2
 # Fully connected layers variables
 fc_size = 1024
 fc2_size = 1024
-dropout_rate = 0.2
+dropout_rate = 0.4
 is_training = True
 # Training variables
 train_batch_size = 64
@@ -171,7 +171,6 @@ conv2 = tf.layers.conv2d(conv1, filters=filters2, kernel_size=filter2_size, acti
 conv2 = tf.layers.max_pooling2d(conv2, pool_size=pooling_kernel2, strides=pooling_stride2)
 # Initialize 2 fully connected layers with dropout. If is_training is false, dropout will not be used
 fc1 = tf.layers.flatten(conv2)
-test = fc1
 fc1 = tf.layers.dense(fc1, units=fc_size, activation=tf.nn.relu)
 fc1 = tf.layers.dropout(fc1, rate=dropout_rate, training=is_training)
 fc2 = tf.layers.dense(fc1, units=fc2_size, activation=tf.nn.relu)
@@ -202,9 +201,6 @@ for i in range(1, training_iterations + 1):
     batch_images, batch_labels = next_batch(train_batch_size, train_images, train_labels)
     feed = {x: batch_images, y: batch_labels}
     sess.run(train, feed_dict=feed)
-    test = sess.run(test, feed_dict=feed)
-    print(np.shape(test))
-    print("shape")
 
     if i % 100 == 0:
         acc, tcost = sess.run([accuracy, cost], feed_dict=feed)
