@@ -1,5 +1,5 @@
 
-# Object Classifier: Urban vs. Nature
+# Image Classifier: Urban vs. Nature
 
 The goal of this project was to create and train a convolutional neural network to be able to classify images as being urban or nature using Tensorflow.
 
